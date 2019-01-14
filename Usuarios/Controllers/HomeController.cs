@@ -4,19 +4,28 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Usuarios.Library;
 using Usuarios.Models;
 
 namespace Usuarios.Controllers
 {
     public class HomeController : Controller
     {
+        LUsuarios _usuarios;
+
         IServiceProvider _serviceProvider;
-        public HomeController(IServiceProvider serviceProvider)
+        //public HomeController(IServiceProvider serviceProvider)
+        //{
+        //    _serviceProvider = serviceProvider;
+        //}
+
+        public HomeController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, RoleManager<IdentityRole> roleManager)
         {
-            _serviceProvider = serviceProvider;
+            _usuarios = new LUsuarios(userManager, signInManager, roleManager);
         }
 
         public async Task<IActionResult> Index()
@@ -26,6 +35,16 @@ namespace Usuarios.Controllers
             return View();
         }
 
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> Index(LoginViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var listObject = await _usuarios.UserLogin(model.Input.Email, model.Input.Password);
+            }
+            return View(model);
+        }
         public IActionResult About()
         {
             ViewData["Message"] = "Your application description page.";
